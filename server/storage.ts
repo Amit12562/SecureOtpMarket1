@@ -30,8 +30,8 @@ export class MemStorage implements IStorage {
 
     // Create default admin user with 5-letter password
     this.createUser({
-      username: "admin",
-      password: "admin"
+      username: "noobru",
+      password: "boss"
     }).then(user => {
       const adminUser = { ...user, isAdmin: true };
       this.users.set(user.id, adminUser);
