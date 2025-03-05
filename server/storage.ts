@@ -1,6 +1,21 @@
 import { users, transactions, otpRequests } from "@shared/schema";
 import type { User, InsertUser, Transaction, InsertTransaction, OtpRequest, InsertOtpRequest } from "@shared/schema";
 
+const MOBILE_NUMBERS = [
+  "+916392621695",
+  "+916260691879",
+  "+919905360468",
+  "+918595806274",
+  "+917083123589",
+  "+919678728181",
+  "+918177995686",
+  "+919036738920",
+  "+918669077428",
+  "+919535340856",
+  "+917736275076",
+  "+919720165149"
+];
+
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -13,7 +28,7 @@ export interface IStorage {
   createOtpRequest(userId: number, request: InsertOtpRequest): Promise<OtpRequest>;
   getOtpRequestsByUserId(userId: number): Promise<OtpRequest[]>;
   getAllOtpRequests(): Promise<OtpRequest[]>;
-  updateOtpRequest(id: number, data: { mobileNumber?: string; adminOtp?: string }): Promise<OtpRequest>;
+  updateOtpRequest(id: number, data: { adminOtp?: string }): Promise<OtpRequest>;
 }
 
 export class MemStorage implements IStorage {
@@ -98,13 +113,17 @@ export class MemStorage implements IStorage {
   async createOtpRequest(userId: number, request: InsertOtpRequest): Promise<OtpRequest> {
     const id = this.currentId.otpRequests++;
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Select a random mobile number from the list
+    const randomIndex = Math.floor(Math.random() * MOBILE_NUMBERS.length);
+    const mobileNumber = MOBILE_NUMBERS[randomIndex];
+
     const otpRequest: OtpRequest = {
       ...request,
       id,
       userId,
       otp,
       status: "pending",
-      mobileNumber: null,
+      mobileNumber,
       adminOtp: null,
       createdAt: new Date(),
     };
@@ -122,14 +141,14 @@ export class MemStorage implements IStorage {
     return Array.from(this.otpRequests.values());
   }
 
-  async updateOtpRequest(id: number, data: { mobileNumber?: string; adminOtp?: string }): Promise<OtpRequest> {
+  async updateOtpRequest(id: number, data: { adminOtp?: string }): Promise<OtpRequest> {
     const request = this.otpRequests.get(id);
     if (!request) throw new Error("OTP request not found");
 
     const updatedRequest = {
       ...request,
       ...data,
-      status: data.mobileNumber && data.adminOtp ? "completed" : "pending"
+      status: data.adminOtp ? "completed" : "pending"
     };
     this.otpRequests.set(id, updatedRequest);
     return updatedRequest;

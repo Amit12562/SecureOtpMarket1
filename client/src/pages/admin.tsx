@@ -38,8 +38,8 @@ export default function Admin() {
   });
 
   const updateOtpRequestMutation = useMutation({
-    mutationFn: async ({ id, mobileNumber, adminOtp }: { id: number; mobileNumber: string; adminOtp: string }) => {
-      await apiRequest("POST", `/api/admin/otp-requests/${id}`, { mobileNumber, adminOtp });
+    mutationFn: async ({ id, adminOtp }: { id: number; adminOtp: string }) => {
+      await apiRequest("POST", `/api/admin/otp-requests/${id}`, { adminOtp });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/otp-requests"] });
@@ -114,21 +114,15 @@ export default function Admin() {
                   <p className="text-sm text-muted-foreground">
                     Date: {new Date(request.createdAt).toLocaleString()}
                   </p>
+                  <p className="text-sm text-muted-foreground">
+                    Mobile: {request.mobileNumber}
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Input 
-                    placeholder="Enter mobile number"
-                    onChange={(e) => updateOtpRequestMutation.mutate({ 
-                      id: request.id, 
-                      mobileNumber: e.target.value,
-                      adminOtp: request.adminOtp || ''
-                    })}
-                  />
                   <Input 
                     placeholder="Enter OTP"
                     onChange={(e) => updateOtpRequestMutation.mutate({ 
                       id: request.id,
-                      mobileNumber: request.mobileNumber || '',
                       adminOtp: e.target.value
                     })}
                   />
