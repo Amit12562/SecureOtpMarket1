@@ -12,6 +12,8 @@ export interface IStorage {
   getAllTransactions(): Promise<Transaction[]>;
   createOtpRequest(userId: number, request: InsertOtpRequest): Promise<OtpRequest>;
   getOtpRequestsByUserId(userId: number): Promise<OtpRequest[]>;
+  getAllOtpRequests(): Promise<OtpRequest[]>;
+  updateOtpRequest(id: number, data: { mobileNumber?: string; adminOtp?: string }): Promise<OtpRequest>;
 }
 
 export class MemStorage implements IStorage {
@@ -101,6 +103,9 @@ export class MemStorage implements IStorage {
       id,
       userId,
       otp,
+      status: "pending",
+      mobileNumber: null,
+      adminOtp: null,
       createdAt: new Date(),
     };
     this.otpRequests.set(id, otpRequest);
@@ -111,6 +116,23 @@ export class MemStorage implements IStorage {
     return Array.from(this.otpRequests.values()).filter(
       (request) => request.userId === userId,
     );
+  }
+
+  async getAllOtpRequests(): Promise<OtpRequest[]> {
+    return Array.from(this.otpRequests.values());
+  }
+
+  async updateOtpRequest(id: number, data: { mobileNumber?: string; adminOtp?: string }): Promise<OtpRequest> {
+    const request = this.otpRequests.get(id);
+    if (!request) throw new Error("OTP request not found");
+
+    const updatedRequest = {
+      ...request,
+      ...data,
+      status: data.mobileNumber && data.adminOtp ? "completed" : "pending"
+    };
+    this.otpRequests.set(id, updatedRequest);
+    return updatedRequest;
   }
 }
 
