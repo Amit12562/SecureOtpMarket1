@@ -28,10 +28,10 @@ export class MemStorage implements IStorage {
     this.otpRequests = new Map();
     this.currentId = { users: 1, transactions: 1, otpRequests: 1 };
 
-    // Create default admin user
+    // Create default admin user with 5-letter password
     this.createUser({
       username: "admin",
-      password: "admin123"
+      password: "admin"
     }).then(user => {
       const adminUser = { ...user, isAdmin: true };
       this.users.set(user.id, adminUser);
