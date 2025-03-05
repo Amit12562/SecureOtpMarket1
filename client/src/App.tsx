@@ -9,6 +9,7 @@ import Signup from "@/pages/auth/signup";
 import Dashboard from "@/pages/dashboard";
 import AddCash from "@/pages/add-cash";
 import Admin from "@/pages/admin";
+import History from "@/pages/history";
 
 function Router() {
   return (
@@ -28,6 +29,11 @@ function Router() {
       <Route path="/admin">
         <AuthGuard>
           <Admin />
+        </AuthGuard>
+      </Route>
+      <Route path="/history">
+        <AuthGuard>
+          <History />
         </AuthGuard>
       </Route>
       <Route path="/">

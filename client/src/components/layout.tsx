@@ -34,7 +34,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </a>
               </Link>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
+              <Link href="/history">
+                <Button variant="ghost">History</Button>
+              </Link>
               <Button
                 variant="ghost"
                 onClick={() => logoutMutation.mutate()}

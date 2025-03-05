@@ -206,6 +206,19 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.get("/api/otp-requests/history", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    try {
+      const requests = await storage.getOtpRequestsByUserId(req.session.userId);
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
