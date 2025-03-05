@@ -9,6 +9,7 @@ export interface IStorage {
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransactionStatus(id: number, status: string): Promise<Transaction>;
   getTransactionsByUserId(userId: number): Promise<Transaction[]>;
+  getAllTransactions(): Promise<Transaction[]>;
   createOtpRequest(userId: number, request: InsertOtpRequest): Promise<OtpRequest>;
   getOtpRequestsByUserId(userId: number): Promise<OtpRequest[]>;
 }
@@ -24,6 +25,15 @@ export class MemStorage implements IStorage {
     this.transactions = new Map();
     this.otpRequests = new Map();
     this.currentId = { users: 1, transactions: 1, otpRequests: 1 };
+
+    // Create default admin user
+    this.createUser({
+      username: "admin",
+      password: "admin123"
+    }).then(user => {
+      const adminUser = { ...user, isAdmin: true };
+      this.users.set(user.id, adminUser);
+    });
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -38,7 +48,7 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentId.users++;
-    const user: User = { ...insertUser, id, balance: 0 };
+    const user: User = { ...insertUser, id, balance: 0, isAdmin: false };
     this.users.set(id, user);
     return user;
   }
@@ -46,7 +56,7 @@ export class MemStorage implements IStorage {
   async updateUserBalance(id: number, amount: number): Promise<User> {
     const user = await this.getUser(id);
     if (!user) throw new Error("User not found");
-    
+
     const updatedUser = { ...user, balance: user.balance + amount };
     this.users.set(id, updatedUser);
     return updatedUser;
@@ -67,7 +77,7 @@ export class MemStorage implements IStorage {
   async updateTransactionStatus(id: number, status: string): Promise<Transaction> {
     const transaction = this.transactions.get(id);
     if (!transaction) throw new Error("Transaction not found");
-    
+
     const updatedTransaction = { ...transaction, status };
     this.transactions.set(id, updatedTransaction);
     return updatedTransaction;
@@ -77,6 +87,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.transactions.values()).filter(
       (transaction) => transaction.userId === userId,
     );
+  }
+
+  async getAllTransactions(): Promise<Transaction[]> {
+    return Array.from(this.transactions.values());
   }
 
   async createOtpRequest(userId: number, request: InsertOtpRequest): Promise<OtpRequest> {

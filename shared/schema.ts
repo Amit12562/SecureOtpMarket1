@@ -7,6 +7,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   balance: integer("balance").notNull().default(0),
+  isAdmin: boolean("is_admin").notNull().default(false),
 });
 
 export const transactions = pgTable("transactions", {
@@ -26,7 +27,7 @@ export const otpRequests = pgTable("otp_requests", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, balance: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, balance: true, isAdmin: true });
 export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, status: true, createdAt: true });
 export const insertOtpRequestSchema = createInsertSchema(otpRequests).pick({ appName: true });
 

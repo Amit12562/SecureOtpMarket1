@@ -56,9 +56,14 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Your Balance</p>
-                <p className="text-3xl font-bold">${user?.balance || 0}</p>
+                <p className="text-3xl font-bold">₹{user?.balance || 0}</p>
               </div>
               <Button onClick={() => setLocation("/add-cash")}>Add Cash</Button>
+              {user?.isAdmin && (
+                <Button onClick={() => setLocation("/admin")} variant="outline">
+                  Admin Dashboard
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

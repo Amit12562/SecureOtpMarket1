@@ -10,19 +10,29 @@ declare module "express-session" {
   }
 }
 
+function requireAdmin(req: Request) {
+  if (!req.session.userId) {
+    throw new Error("Not authenticated");
+  }
+  const user = storage.getUser(req.session.userId);
+  if (!user || !user.isAdmin) {
+    throw new Error("Not authorized");
+  }
+}
+
 export async function registerRoutes(app: Express) {
   app.post("/api/auth/signup", async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
       const existingUser = await storage.getUserByUsername(userData.username);
-      
+
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
       }
 
       const user = await storage.createUser(userData);
       req.session.userId = user.id;
-      res.json({ id: user.id, username: user.username, balance: user.balance });
+      res.json({ id: user.id, username: user.username, balance: user.balance, isAdmin: user.isAdmin });
     } catch (error) {
       if (error instanceof ZodError) {
         res.status(400).json({ message: "Invalid input" });
@@ -36,13 +46,13 @@ export async function registerRoutes(app: Express) {
     try {
       const { username, password } = insertUserSchema.parse(req.body);
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user || user.password !== password) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
       req.session.userId = user.id;
-      res.json({ id: user.id, username: user.username, balance: user.balance });
+      res.json({ id: user.id, username: user.username, balance: user.balance, isAdmin: user.isAdmin });
     } catch (error) {
       res.status(400).json({ message: "Invalid input" });
     }
@@ -64,7 +74,55 @@ export async function registerRoutes(app: Express) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    res.json({ id: user.id, username: user.username, balance: user.balance });
+    res.json({ id: user.id, username: user.username, balance: user.balance, isAdmin: user.isAdmin });
+  });
+
+  app.get("/api/admin/transactions", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const transactions = await storage.getAllTransactions();
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/admin/transactions/:id", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (status !== "approved" && status !== "rejected") {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const transaction = await storage.updateTransactionStatus(parseInt(id), status);
+
+      if (status === "approved") {
+        await storage.updateUserBalance(transaction.userId, transaction.amount);
+      }
+
+      res.json(transaction);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
   });
 
   app.post("/api/transactions", async (req, res) => {

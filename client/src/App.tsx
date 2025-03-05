@@ -8,6 +8,7 @@ import Login from "@/pages/auth/login";
 import Signup from "@/pages/auth/signup";
 import Dashboard from "@/pages/dashboard";
 import AddCash from "@/pages/add-cash";
+import Admin from "@/pages/admin";
 
 function Router() {
   return (
@@ -22,6 +23,11 @@ function Router() {
       <Route path="/add-cash">
         <AuthGuard>
           <AddCash />
+        </AuthGuard>
+      </Route>
+      <Route path="/admin">
+        <AuthGuard>
+          <Admin />
         </AuthGuard>
       </Route>
       <Route path="/">

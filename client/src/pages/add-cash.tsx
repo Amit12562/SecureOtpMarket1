@@ -12,8 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 const addCashSchema = z.object({
-  amount: z.string().min(1),
-  utrNumber: z.string().min(1),
+  amount: z.string().min(1).refine((val) => parseInt(val) >= 1, {
+    message: "Minimum deposit amount is ₹1",
+  }),
+  utrNumber: z.string().min(1, "UTR Number is required"),
 });
 
 type AddCashForm = z.infer<typeof addCashSchema>;
@@ -43,7 +45,7 @@ export default function AddCash() {
       setLocation("/dashboard");
       toast({
         title: "Transaction submitted successfully",
-        description: "Your balance will be updated once verified",
+        description: "Your balance will be updated once admin approves",
       });
     },
   });
@@ -71,9 +73,14 @@ export default function AddCash() {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount ($)</FormLabel>
+                      <FormLabel>Amount (₹)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          {...field} 
+                          placeholder="Enter amount (minimum ₹1)"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
