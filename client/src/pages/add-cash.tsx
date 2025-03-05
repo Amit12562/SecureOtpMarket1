@@ -60,9 +60,9 @@ export default function AddCash() {
           <CardContent className="space-y-6">
             <div className="aspect-square max-w-sm mx-auto border-2 border-dashed rounded-lg flex items-center justify-center">
               <img
-                src="https://images.unsplash.com/photo-1556740714-a8395b3bf30f"
-                alt="QR Code"
-                className="w-full h-full object-cover rounded-lg"
+                src="/attached_assets/Screenshot_20250305-154358.png"
+                alt="UPI QR Code for Payment"
+                className="w-full h-full object-contain rounded-lg"
               />
             </div>
 

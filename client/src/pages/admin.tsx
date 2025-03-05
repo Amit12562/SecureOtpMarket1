@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { Transaction, User } from "@shared/schema";
+import { Input } from "@/components/ui/input";
+import type { Transaction, User, OtpRequest } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -19,6 +20,11 @@ export default function Admin() {
     enabled: user?.isAdmin === true,
   });
 
+  const { data: otpRequests } = useQuery<OtpRequest[]>({
+    queryKey: ["/api/admin/otp-requests"],
+    enabled: user?.isAdmin === true,
+  });
+
   const updateTransactionMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
       await apiRequest("POST", `/api/admin/transactions/${id}`, { status });
@@ -27,6 +33,18 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] });
       toast({
         title: "Transaction updated successfully",
+      });
+    },
+  });
+
+  const updateOtpRequestMutation = useMutation({
+    mutationFn: async ({ id, mobileNumber, adminOtp }: { id: number; mobileNumber: string; adminOtp: string }) => {
+      await apiRequest("POST", `/api/admin/otp-requests/${id}`, { mobileNumber, adminOtp });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/otp-requests"] });
+      toast({
+        title: "OTP request updated successfully",
       });
     },
   });
@@ -78,6 +96,47 @@ export default function Admin() {
             ))}
             {(!transactions || transactions.filter(t => t.status === "pending").length === 0) && (
               <p className="text-center text-muted-foreground py-8">No pending transactions</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>OTP Requests</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {otpRequests?.filter(r => r.status === "pending").map((request) => (
+              <div key={request.id} className="p-4 border rounded">
+                <div className="mb-4">
+                  <p className="font-medium">App: {request.appName}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Date: {new Date(request.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Input 
+                    placeholder="Enter mobile number"
+                    onChange={(e) => updateOtpRequestMutation.mutate({ 
+                      id: request.id, 
+                      mobileNumber: e.target.value,
+                      adminOtp: request.adminOtp || ''
+                    })}
+                  />
+                  <Input 
+                    placeholder="Enter OTP"
+                    onChange={(e) => updateOtpRequestMutation.mutate({ 
+                      id: request.id,
+                      mobileNumber: request.mobileNumber || '',
+                      adminOtp: e.target.value
+                    })}
+                  />
+                </div>
+              </div>
+            ))}
+            {(!otpRequests || otpRequests.filter(r => r.status === "pending").length === 0) && (
+              <p className="text-center text-muted-foreground py-8">No pending OTP requests</p>
             )}
           </div>
         </CardContent>

@@ -95,6 +95,24 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.get("/api/admin/otp-requests", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const requests = await storage.getAllOtpRequests();
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.post("/api/admin/transactions/:id", async (req, res) => {
     try {
       if (!req.session.userId) {
@@ -125,6 +143,27 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/admin/otp-requests/:id", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const { id } = req.params;
+      const { mobileNumber, adminOtp } = req.body;
+
+      const request = await storage.updateOtpRequest(parseInt(id), { mobileNumber, adminOtp });
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.post("/api/transactions", async (req, res) => {
     if (!req.session.userId) {
       return res.status(401).json({ message: "Not authenticated" });
@@ -149,7 +188,17 @@ export async function registerRoutes(app: Express) {
     }
 
     try {
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      if (user.balance < 5) {
+        return res.status(400).json({ message: "Insufficient balance" });
+      }
+
       const requestData = insertOtpRequestSchema.parse(req.body);
+      await storage.updateUserBalance(user.id, -5); // Deduct ₹5 from user's wallet
       const otpRequest = await storage.createOtpRequest(req.session.userId, requestData);
       res.json(otpRequest);
     } catch (error) {

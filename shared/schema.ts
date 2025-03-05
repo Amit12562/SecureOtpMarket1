@@ -24,6 +24,9 @@ export const otpRequests = pgTable("otp_requests", {
   userId: integer("user_id").notNull().references(() => users.id),
   appName: text("app_name").notNull(),
   otp: text("otp").notNull(),
+  mobileNumber: text("mobile_number"),
+  adminOtp: text("admin_otp"),
+  status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
