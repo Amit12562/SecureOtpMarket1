@@ -193,12 +193,12 @@ export async function registerRoutes(app: Express) {
         return res.status(401).json({ message: "User not found" });
       }
 
-      if (user.balance < 5) {
-        return res.status(400).json({ message: "Insufficient balance" });
+      if (user.balance < 7) {
+        return res.status(400).json({ message: "Insufficient balance (Minimum ₹7 required)" });
       }
 
       const requestData = insertOtpRequestSchema.parse(req.body);
-      await storage.updateUserBalance(user.id, -5); // Deduct ₹5 from user's wallet
+      await storage.updateUserBalance(user.id, -7); // Deduct ₹7 from user's wallet
       const otpRequest = await storage.createOtpRequest(req.session.userId, requestData);
       res.json(otpRequest);
     } catch (error) {

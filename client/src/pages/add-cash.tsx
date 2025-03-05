@@ -62,7 +62,8 @@ export default function AddCash() {
               <img
                 src="/attached_assets/Screenshot_20250305-154358.png"
                 alt="UPI QR Code for Payment"
-                className="w-full h-full object-contain rounded-lg"
+                className="w-full h-full object-contain p-4"
+                style={{ imageRendering: 'pixelated' }}
               />
             </div>
 

@@ -21,8 +21,9 @@ export default function Dashboard() {
     queryKey: ["/api/auth/me"],
   });
 
-  const { data: otpRequests } = useQuery<OtpRequest[]>({
+  const { data: otpRequests } = useQuery<OtpRequest>({
     queryKey: ["/api/otp-requests"],
+    refetchInterval: 1000, // Poll every second to check for updates
   });
 
   const form = useForm<InsertOtpRequest>({
@@ -38,9 +39,16 @@ export default function Dashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/otp-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       form.reset();
       toast({
         title: "OTP generated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: error.message || "Failed to generate OTP",
+        variant: "destructive",
       });
     },
   });
@@ -71,6 +79,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Generate OTP</CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">Cost: ₹7 per OTP</p>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -88,32 +97,37 @@ export default function Dashboard() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" disabled={otpMutation.isPending}>
-                  Generate OTP
+                <Button type="submit" disabled={otpMutation.isPending || (user?.balance || 0) < 7}>
+                  {(user?.balance || 0) < 7 ? "Insufficient Balance" : "Generate OTP"}
                 </Button>
               </form>
             </Form>
           </CardContent>
         </Card>
 
-        {otpRequests && otpRequests.length > 0 && (
+        {otpRequests && (
           <Card>
             <CardHeader>
               <CardTitle>Recent OTPs</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {otpRequests.map((request) => (
-                  <div key={request.id} className="flex justify-between items-center p-4 border rounded">
-                    <div>
-                      <p className="font-medium">{request.appName}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(request.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                    <p className="text-xl font-mono">{request.otp}</p>
+                <div className="flex justify-between items-center p-4 border rounded">
+                  <div>
+                    <p className="font-medium">{otpRequests.appName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(otpRequests.createdAt).toLocaleString()}
+                    </p>
+                    {otpRequests.mobileNumber && (
+                      <p className="text-sm mt-2">Mobile: {otpRequests.mobileNumber}</p>
+                    )}
+                    {otpRequests.adminOtp && otpRequests.createdAt && 
+                      Date.now() - new Date(otpRequests.createdAt).getTime() > 25 * 60 * 1000 && (
+                      <p className="text-sm mt-2">OTP: {otpRequests.adminOtp}</p>
+                    )}
                   </div>
-                ))}
+                  <p className="text-xl font-mono">{otpRequests.otp}</p>
+                </div>
               </div>
             </CardContent>
           </Card>
