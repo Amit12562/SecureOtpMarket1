@@ -10,6 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import AddCash from "@/pages/add-cash";
 import Admin from "@/pages/admin";
 import History from "@/pages/history";
+import { useEffect } from "react";
 
 function Router() {
   return (
@@ -47,6 +48,12 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    window.onerror = function (message, source, lineno, colno, error) {
+      alert(`Error: ${message} at ${source}:${lineno}:${colno}`);
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router />
