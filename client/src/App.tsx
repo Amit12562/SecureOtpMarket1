@@ -49,9 +49,19 @@ function Router() {
 
 function App() {
   useEffect(() => {
+    // ✅ Catch Global Errors & Show Alert
     window.onerror = function (message, source, lineno, colno, error) {
       alert(`Error: ${message} at ${source}:${lineno}:${colno}`);
     };
+
+    // ✅ Debugging Token Status
+    const token = localStorage.getItem("token");
+    console.log("🔹 App Load - Token Found:", token);
+
+    // ✅ Debugging AuthGuard Check
+    window.addEventListener("storage", () => {
+      console.log("🔹 AuthGuard - Token Updated:", localStorage.getItem("token"));
+    });
   }, []);
 
   return (
